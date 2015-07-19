@@ -21,7 +21,7 @@ build/
 bld/
 [Bb]in/
 [Bb]in_x64/
-[Bb]in_x86/
+[Bb]in_Win32/
 [Oo]bj/
 [Ll]ibrary
 
