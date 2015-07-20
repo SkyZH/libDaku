@@ -1,0 +1,3 @@
+[submodule "Source/libdaku"]
+	path = Source/libdaku
+	url = git@github.com:SkyZH/libdaku.git
