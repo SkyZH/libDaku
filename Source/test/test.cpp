@@ -1,57 +1,35 @@
 #include "stdafx.h"
 
-#define VID_WIDTH  640
-#define VID_HEIGHT 400
-#define VID_DUR    10
-#define VID_FRATE  30
-#define AUD_SRATE  44100
-
 int main(int argc, char *argv[])
 {
 	if (argc < 2) {
-		printf("Code-based video generating based on frame pullers & pushers\n");
 		printf("Usage: %s <output>\n", argv[0]);
-		printf("Reads a video and outputs it to another format.\n");
-		return 1;
+		printf("A sample for libdaku.\n\n");
+		return 888;
 	}
 	av_register_all();
+	daku_world *world = daku_world_create(600, 600, 15);
+	daku_matter *m;
 
-	int ret;
-	frame_pusher *pusher;
-	if ((ret = frame_pusher_open(&pusher, argv[1], AUD_SRATE, VID_FRATE, VID_WIDTH, VID_HEIGHT, 800000)) < 0) {
-		av_log(NULL, AV_LOG_ERROR, "Cannot open output\n");
-		return ret;
-	}
+	m = daku_matter_create();
+	daku_matter_setlife(m, 7);
+	daku_matter_setsize(m, 200, 400);
+	daku_matter_setanchor(m, 0, 0);
+	daku_matter_setpos(m, 233, -40);
+	daku_matter_act(m, 0, daku_matter_shape(7, DAKU_SHAPE_RECT, 0x66ccff, 255));
+	daku_matter_act(m, 2, daku_fx_moveby(3, 233, 90));
+	daku_matter_act(m, 6, daku_fx_moveby(0.5, 0, 350));
+	daku_world_populate(world, m, 5);
 
-	uint8_t *picture[4] = { 0 };
-	// The buffer size needs to be multiplied by 3 because the format is RGB24
-	int linesize[4] = { VID_WIDTH * 3 * sizeof(uint8_t) };
-	int bufsize = VID_HEIGHT * linesize[0];
-	picture[0] = (uint8_t *)av_malloc(bufsize);
-	picture[1] = (uint8_t *)av_malloc(bufsize);
+	m = daku_matter_create();
+	daku_matter_setlife(m, 9);
+	daku_matter_setsize(m, 300, 300);
+	daku_matter_setanchor(m, 1, 0);
+	daku_matter_setpos(m, 600, 0);
+	daku_matter_act(m, 0, daku_matter_shape(9, DAKU_SHAPE_RECT, 0x99ffff, 128));
+	daku_world_populate(world, m, 4);
 
-	// Generate frames
-	int i, j;
-	uint8_t grey;
-	float loudness;
-	for (i = 0; i < VID_FRATE * VID_DUR; ++i) {
-		// Video
-		for (j = linesize[0] * i; j < linesize[0] * (i + 1); ++j)
-			picture[0][j] = rand() % 256;
-		memset(picture[0] + linesize[0] * (i + 1), i < 150 ? 255 : 0, linesize[0]);
-		grey = (int)((double)i / (double)(VID_FRATE * VID_DUR - 1) * 255.0);
-		memset(picture[0] + linesize[0] * (i + 2), grey, bufsize);
-		frame_pusher_write_video(pusher, picture, linesize, 1);
-		// Audio
-		loudness = ((1 + sin((float)i / 75.0 * M_PI)) / 2);
-		loudness = loudness * loudness * 2 + 0.2;
-		for (j = 0; j < AUD_SRATE / VID_FRATE; ++j)
-			frame_pusher_write_audio(pusher,
-			(int16_t)(loudness * (float)(rand() % 200 - 100)),
-			(int16_t)(loudness * (float)(rand() % 200 - 100)));
-	}
+	daku_world_write(world, argv[1]);
 
-	// Release resources
-	frame_pusher_close(pusher);
 	return 0;
 }
